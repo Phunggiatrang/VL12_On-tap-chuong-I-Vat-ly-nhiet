@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Kiểm Tra Vật Lí 12 - Chương I: Vật Lí Nhiệt</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- KaTeX cho hiển thị công thức chuẩn LaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header ứng dụng -->
+    <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 py-4 px-6 sticky top-0 z-40 shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-indigo-500/30">
+                    VL
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-white tracking-wide">Kiểm Tra Vật Lí 12 &bull; Chương I: Vật Lí Nhiệt</h1>
+                    <p class="text-xs text-indigo-300" id="header-subtitle">Hệ thống 3 chặng tiêu chuẩn (Hỗ trợ hoạt động Offline)</p>
+                </div>
+            </div>
+            <div id="timer-display" class="hidden bg-slate-700/80 text-indigo-400 px-4 py-2 rounded-xl font-mono text-base font-bold border border-slate-600/50 flex items-center gap-2 shadow-inner">
+                <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span id="time-remaining">10:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto w-full p-4 md:p-6 my-auto flex-grow">
+        
+        <!-- Màn hình Đăng ký / Nhập thông tin học sinh -->
+        <section id="student-modal" class="bg-slate-800 border border-slate-700/80 rounded-3xl p-6 md:p-10 shadow-2xl animate-fade-in max-w-xl mx-auto my-8">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-indigo-600/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold border border-indigo-500/30">
+                    📝
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Đăng Ký Vào Phòng Thi</h2>
+                <p class="text-sm text-slate-400">Hệ thống 3 chặng hấp dẫn bám sát SGV & SGK Vật lí Nhiệt (Thời lượng: 10 phút).</p>
+            </div>
+
+            <form id="student-form" onsubmit="startExam(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1.5">Họ và tên:</label>
+                    <input type="text" id="input-name" required placeholder="Ví dụ: Nguyễn Văn An" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1.5">Lớp:</label>
+                    <input type="text" id="input-class" required placeholder="Ví dụ: 12A1" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1.5">Trường - Phân hiệu:</label>
+                    <input type="text" id="input-school" required placeholder="Ví dụ: THPT La Gi" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-600/30 transition-all cursor-pointer">
+                        Vào Phòng Thi (Bắt đầu Chặng 1)
+                    </button>
+                </div>
+            </form>
+
+            <!-- Bảng xếp hạng và Thống kê tổng hợp -->
+            <div id="start-leaderboard" class="mt-8 pt-6 border-t border-slate-700/60 hidden space-y-6">
+                <!-- Bộ lọc theo phân hiệu / lớp -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-700/50">
+                    <div class="text-xs font-bold text-slate-300">📊 Thống kê lớp / Phân hiệu:</div>
+                    <select id="filter-branch" onchange="filterLeaderboard()" class="bg-slate-800 border border-slate-700 text-xs text-indigo-300 rounded-xl px-3 py-2 outline-none">
+                        <option value="all">Toàn bộ trường / lớp</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-slate-300 flex items-center gap-2">🏆 Bảng Vinh Danh TOP 10 (Từ Cao Xuống Thấp)</h3>
+                        <button type="button" onclick="clearLeaderboard()" class="text-xs text-rose-400 hover:text-rose-300 underline cursor-pointer">Xóa lịch sử</button>
+                    </div>
+                    <div id="start-leaderboard-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phần Chơi Game / Kiểm tra (Theo thứ tự Logic: Chặng 1 -> Chặng 2 -> Chặng 3) -->
+        <section id="quiz-container" class="hidden space-y-6">
+            <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-md">
+                <div class="flex items-center gap-3">
+                    <span id="assigned-stage-badge" class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-xl text-sm font-bold">Chặng 1: Khởi Động Nhanh</span>
+                    <span id="progress-text" class="text-sm font-semibold text-slate-300">0/10 câu</span>
+                </div>
+                <div class="w-full md:w-48 bg-slate-700 h-2 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Khung chứa câu hỏi hiện tại theo chặng -->
+            <div id="active-stage-container" class="space-y-6"></div>
+
+            <div class="flex justify-between items-center pt-4 pb-12">
+                <button type="button" id="btn-prev" onclick="prevStage()" class="hidden bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-xl transition-all cursor-pointer">
+                    &larr; Chặng trước
+                </button>
+                <div class="ml-auto">
+                    <button type="button" id="btn-next" onclick="nextStage()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all cursor-pointer">
+                        Tiếp theo chặng &rarr;
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal Kết quả & Review Top 10 / Thống kê -->
+        <section id="result-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+            <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold border border-emerald-500/30">
+                        🏆
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-1">Tổng Kết Bài Kiểm Tra Vật Lí Nhiệt</h3>
+                    <p id="result-student-meta" class="text-sm text-slate-400"></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 text-center">
+                        <div class="text-xs text-slate-400 mb-1">Tổng Điểm Đạt Được</div>
+                        <div id="result-score" class="text-3xl font-black text-indigo-400">0.0 / 10</div>
+                    </div>
+                    <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-4 text-center">
+                        <div class="text-xs text-slate-400 mb-1">Thời gian hoàn thành</div>
+                        <div id="result-time" class="text-3xl font-black text-amber-400">00:00</div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 justify-center mb-6">
+                    <button type="button" onclick="showReviewMode()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-xl transition-all text-sm cursor-pointer shadow-md">
+                        Xem đáp án & giải thích
+                    </button>
+                    <button type="button" onclick="location.reload()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 px-5 rounded-xl transition-all text-sm border border-slate-700 cursor-pointer">
+                        Làm lượt mới
+                    </button>
+                </div>
+
+                <div class="border-t border-slate-800 pt-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-bold text-slate-200">🏆 Bảng Vinh Danh TOP 10 Lớp / Phân Hiệu</h4>
+                        <select id="modal-filter-branch" onchange="filterModalLeaderboard()" class="bg-slate-800 border border-slate-700 text-xs text-indigo-300 rounded-lg px-2 py-1 outline-none">
+                            <option value="all">Toàn bộ trường</option>
+                        </select>
+                    </div>
+                    <div id="modal-leaderboard-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800/40 border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500">
+        Hệ thống Kiểm tra Vật lí 12 (Chủ đề: Vật lí nhiệt) &bull; Hoạt động ngoại tuyến (Offline Ready)
+    </footer>
+
+    <script>
+        /* 
+           NGÂN HÀNG CÂU HỎI 3 CHẶNG CHUẨN SƠ ĐỒ THIẾT KẾ VẬT LÍ NHIỆT (ĐÃ LỌC CÂU HỎI ĐỒ THỊ/HÌNH ẢNH HỢP LỆ)
+        */
+        const gameStages = [
+            {
+                stageId: 1,
+                stageName: "Chặng 1: Khởi Động Nhanh (Trắc nghiệm nhiều lựa chọn)",
+                description: "Mỗi câu đúng được 0.5 điểm. Kiểm tra mức độ Nhận biết & Thông hiểu cấu tạo chất và nội năng.",
+                questions: [
+                    {
+                        id: "s1_1", level: "Nhận biết",
+                        question: "Theo mô hình động học phân tử về cấu tạo chất, phát biểu nào sau đây là <b>đúng</b>?",
+                        options: [
+                            { text: "Các phân tử chất khí chuyển động hỗn loạn, không ngừng và tốc độ tăng khi nhiệt độ tăng.", correct: true },
+                            { text: "Các chất cấu tạo từ các hạt riêng biệt nhưng giữa các phân tử tuyệt đối không có khoảng trống.", correct: false },
+                            { text: "Giữa các phân tử cấu tạo chất chỉ có lực đẩy, tuyệt đối không có lực hút.", correct: false },
+                            { text: "Khi thể tích vật tăng thì tốc độ chuyển động nhiệt của các phân tử chắc chắn tăng.", correct: false }
+                        ],
+                        explanation: "Các phân tử chuyển động hỗn loạn không ngừng; nhiệt độ vật càng cao thì tốc độ chuyển động nhiệt càng lớn."
+                    },
+                    {
+                        id: "s1_2", level: "Nhận biết",
+                        question: "Nội năng của một vật được định nghĩa là",
+                        options: [
+                            { text: "tổng động năng và thế năng của các phân tử cấu tạo nên vật.", correct: true },
+                            { text: "tổng nhiệt lượng và cơ năng mà vật nhận được trong quá trình truyền nhiệt.", correct: false },
+                            { text: "năng lượng nhiệt mà vật luôn bức xạ ra môi trường xung quanh.", correct: false },
+                            { text: "cơ năng toàn phần của vật khi chuyển động trong không gian.", correct: false }
+                        ],
+                        explanation: "Nội năng là tổng động năng chuyển động nhiệt của các phân tử và thế năng tương tác giữa chúng."
+                    },
+                    {
+                        id: "s1_3", level: "Thông hiểu",
+                        question: "Phát biểu nào sau đây là <b>đúng</b> khi nói về quy ước dấu trong Định luật I của nhiệt động lực học (\\(\\Delta U = Q + A\\))?",
+                        options: [
+                            { text: "Vật nhận công từ vật khác thì \\(A > 0\\).", correct: true },
+                            { text: "Vật nhận nhiệt lượng từ môi trường thì \\(Q < 0\\).", correct: false },
+                            { text: "Vật thực hiện công lên vật khác thì \\(A > 0\\).", correct: false },
+                            { text: "Vật truyền nhiệt lượng cho vật khác thì \\(Q > 0\\).", correct: false }
+                        ],
+                        explanation: "Theo quy ước, vật nhận công \\(A > 0\\); vật nhận nhiệt \\(Q > 0\\)."
+                    },
+                    {
+                        id: "s1_4", level: "Thông hiểu",
+                        question: "Nhiệt nóng chảy riêng \\(\\lambda\\) của một chất rắn kết tinh có ý nghĩa là",
+                        options: [
+                            { text: "nhiệt lượng cần cung cấp để làm nóng chảy hoàn toàn \\(1\\text{ kg}\\) chất đó ở nhiệt độ nóng chảy.", correct: true },
+                            { text: "nhiệt lượng cần cung cấp để \\(1\\text{ kg}\\) chất đó tăng thêm \\(1^\\circ\\text{C}\\).", correct: false },
+                            { text: "nhiệt lượng tỏa ra khi \\(1\\text{ kg}\\) chất đó hóa hơi hoàn toàn ở nhiệt độ sôi.", correct: false },
+                            { text: "nhiệt lượng cần thiết để nung nóng \\(1\\text{ kg}\\) chất đó từ \\(0^\\circ\\text{C}\\) đến nhiệt độ nóng chảy.", correct: false }
+                        ],
+                        explanation: "Nhiệt nóng chảy riêng cho biết nhiệt lượng cần cung cấp để \\(1\\text{ kg}\\) chất rắn nóng chảy hoàn toàn ở nhiệt độ nóng chảy mà không đổi nhiệt độ."
+                    },
+                    {
+                        id: "s1_5", level: "Nhận biết",
+                        question: "Trong hệ đơn vị SI, đơn vị đo của nhiệt độ tuyệt đối là",
+                        options: [
+                            { text: "Kelvin (K).", correct: true },
+                            { text: "Độ Celsius (\\(^\\circ\\text{C}\\)).", correct: false },
+                            { text: "Độ Fahrenheit (\\(^\\circ\\text{F}\\)).", correct: false },
+                            { text: "Calorie (cal).", correct: false }
+                        ],
+                        explanation: "Trong hệ SI, đơn vị đo nhiệt độ tuyệt đối là Kelvin (K)."
+                    },
+                    {
+                        id: "s1_6", level: "Thông hiểu",
+                        question: "Hiện tượng nào sau đây liên quan rõ nét nhất đến sự hóa hơi?",
+                        options: [
+                            { text: "Vào những ngày mùa hè, ta vẫy nước trên sàn nhà thấy mát mẻ khi nước bay hơi.", correct: true },
+                            { text: "Nước trong khay đặt vào ngăn đá tủ lạnh chuyển thành đá.", correct: false },
+                            { text: "Băng tan thành nước ở các vùng cực vào mùa xuân.", correct: false },
+                            { text: "Hơi nước ngưng tụ thành các hạt sương mù vào buổi sáng sớm.", correct: false }
+                        ],
+                        explanation: "Sự bay hơi thu nhiệt từ môi trường xung quanh, làm hạ nhiệt độ tạo cảm giác mát mẻ."
+                    },
+                    {
+                        id: "s1_7", level: "Nhận biết",
+                        question: "Biểu thức tính nhiệt lượng trong quá trình truyền nhiệt làm thay đổi nhiệt độ của một lượng chất rắn hoặc lỏng (không chuyển thể) là",
+                        options: [
+                            { text: "\\(Q = mc\\Delta T\\)", correct: true },
+                            { text: "\\(Q = \\lambda m\\)", correct: false },
+                            { text: "\\(Q = Lm\\)", correct: false },
+                            { text: "\\(Q = mc^2\\)", correct: false }
+                        ],
+                        explanation: "Công thức tính nhiệt lượng là \\(Q = mc\\Delta T\\)."
+                    },
+                    {
+                        id: "s1_8", level: "Thông hiểu",
+                        question: "Độ không tuyệt đối ứng với nhiệt độ nào sau đây?",
+                        options: [
+                            { text: "\\(0\\text{ K}\\) (hay \\(-273^\\circ\\text{C}\\)).", correct: true },
+                            { text: "\\(273\\text{ K}\\) (hay \\(0^\\circ\\text{C}\\)).", correct: false },
+                            { text: "\\(100\\text{ K}\\) (hay \\(-100^\\circ\\text{C}\\)).", correct: false },
+                            { text: "\\(0^\\circ\\text{C}\\).", correct: false }
+                        ],
+                        explanation: "Độ không tuyệt đối là gốc của thang nhiệt độ Kelvin, ứng với \\(0\\text{ K} = -273^\\circ\\text{C}\\)."
+                    },
+                    {
+                        id: "s1_9", level: "Nhận biết",
+                        question: "Nhiệt hóa hơi riêng \\(L\\) của một chất lỏng cho biết",
+                        options: [
+                            { text: "nhiệt lượng cần cung cấp để \\(1\\text{ kg}\\) chất lỏng hóa hơi hoàn toàn ở nhiệt độ sôi.", correct: true },
+                            { text: "nhiệt lượng cần cung cấp để \\(1\\text{ kg}\\) chất lỏng tăng \\(1^\\circ\\text{C}\\).", correct: false },
+                            { text: "nhiệt lượng tỏa ra khi ngưng tụ \\(1\\text{ kg}\\) chất khí.", correct: false },
+                            { text: "công mà chất khí sinh ra khi giãn nở.", correct: false }
+                        ],
+                        explanation: "Nhiệt hóa hơi riêng cho biết nhiệt lượng cần cung cấp để \\(1\\text{ kg}\\) chất lỏng hóa hơi hoàn toàn ở nhiệt độ sôi."
+                    },
+                    {
+                        id: "s1_10", level: "Thông hiểu",
+                        question: "Phát biểu nào sau đây là <b>sai</b> khi nói về các thể của chất?",
+                        options: [
+                            { text: "Ở thể khí, lực tương tác giữa các phân tử rất lớn nên chúng dao động quanh vị trí cân bằng.", correct: false },
+                            { text: "Ở thể rắn, các phân tử sắp xếp trật tự, dao động quanh vị trí cân bằng cố định.", correct: true },
+                            { text: "Ở thể lỏng, các phân tử dao động quanh các vị trí cân bằng luôn thay đổi.", correct: true },
+                            { text: "Chất khí không có hình dạng và thể tích riêng xác định.", correct: true }
+                        ],
+                        explanation: "Phát biểu A sai vì ở thể khí lực tương tác rất nhỏ, các phân tử chuyển động hỗn loạn không ngừng chứ không dao động quanh vị trí cân bằng."
+                    }
+                ]
+            },
+            {
+                stageId: 2,
+                stageName: "Chặng 2: Thử Thách Đúng / Sai",
+                description: "Mỗi ý đúng được 0.25 điểm (Tổng mỗi câu 1.0 điểm). Kiểm tra năng lực phân tích hiện tượng nhiệt học.",
+                questions: [
+                    {
+                        id: "s2_1", level: "Thông hiểu",
+                        question: "Xét các nhận định về quá trình chuyển thể và nội năng:",
+                        type: "tf",
+                        subQuestions: [
+                            { id: "s2_1_a", text: "Trong quá trình chất rắn kết tinh nóng chảy, nhiệt độ của chất giữ không đổi.", correct: true },
+                            { id: "s2_1_b", text: "Sự bay hơi chỉ xảy ra ở nhiệt độ sôi của chất lỏng.", correct: false },
+                            { id: "s2_1_c", text: "Nhiệt dung riêng của nước lớn giúp điều hòa khí hậu vùng ven biển.", correct: true },
+                            { id: "s2_1_d", text: "Nội năng của một vật chỉ có thể thay đổi bằng cách thực hiện công.", correct: false }
+                        ],
+                        explanation: "a) Đúng. b) Sai, sự bay hơi diễn ra ở mọi nhiệt độ. c) Đúng. d) Sai, nội năng thay đổi bằng truyền nhiệt và thực hiện công."
+                    },
+                    {
+                        id: "s2_2", level: "Vận dụng",
+                        question: "Nhận định về chất khí lí tưởng và định luật chất khí:",
+                        type: "tf",
+                        subQuestions: [
+                            { id: "s2_2_a", text: "Phương trình trạng thái của khí lí tưởng là \\(\\frac{pV}{T} = \\text{hàng số}\\).", correct: true },
+                            { id: "s2_2_b", text: "Khi nén đẳng nhiệt một lượng khí, các phân tử chuyển động chậm lại.", correct: false },
+                            { id: "s2_2_c", text: "Đồ thị biểu diễn quá trình đẳng tích trong hệ tọa độ \\((p, T)\\) là đường thẳng có đường kéo dài đi qua gốc tọa độ.", correct: true },
+                            { id: "s2_2_d", text: "Độ không tuyệt đối ứng với nhiệt độ \\(0\\text{ K}\\) hay \\(-273^\\circ\\text{C}\\).", correct: true }
+                        ],
+                        explanation: "a) Đúng. b) Sai, nhiệt độ không đổi nên tốc độ chuyển động nhiệt không đổi. c) Đúng. d) Đúng."
+                    },
+                    {
+                        id: "s2_3", level: "Thông hiểu",
+                        question: "Các phát biểu sau đây về định luật I NĐLH là đúng hay sai?",
+                        type: "tf",
+                        subQuestions: [
+                            { id: "s2_3_a", text: "Nếu hệ nhận nhiệt và sinh công thì \\(\\Delta U = Q - A_{\\text{sinh}}\\).", correct: true },
+                            { id: "s2_3_b", text: "Nhiệt lượng và công là hai hình thức truyền năng lượng.", correct: true },
+                            { id: "s2_3_c", text: "Khi vật truyền nhiệt cho vật khác thì \\(Q > 0\\).", correct: false },
+                            { id: "s2_3_d", text: "Nội năng là hàm trạng thái.", correct: true }
+                        ],
+                        explanation: "a) Đúng. b) Đúng. c) Sai, truyền nhiệt cho vật khác thì \\(Q < 0\\). d) Đúng."
+                    }
+                ]
+            },
+            {
+                stageId: 3,
+                stageName: "Chặng 3: Vượt Chướng Ngại Vật (Trả lời ngắn & Phân tích thực nghiệm)",
+                description: "Mỗi câu đúng được 1.5 điểm. Bao gồm các bài toán tính toán nhiệt lượng và đọc đồ thị thực nghiệm SGV.",
+                questions: [
+                    {
+                        id: "s3_1", level: "Vận dụng",
+                        question: "Một khối nước có khối lượng \\(m = 2\\text{ kg}\\) ở nhiệt độ \\(20^\\circ\\text{C}\\) được đun nóng đến \\(80^\\circ\\text{C}\\). Cho nhiệt dung riêng của nước \\(c = 4200\\text{ J/(kg}\\cdot\\text{K)}\\). Nhiệt lượng nước nhận được bằng bao nhiêu kilôjun (\\(\\text{kJ}\\))?",
+                        type: "sa", correctAnswer: "504", unit: "kJ",
+                        explanation: "\\(Q = mc\\Delta T = 2 \\times 4200 \\times (80 - 20) = 504.000\\text{ J} = 504\\text{ kJ}\\)."
+                    },
+                    {
+                        id: "s3_2", level: "Vận dụng",
+                        question: "Một lượng khí nhận nhiệt lượng \\(100\\text{ J}\\) do đun nóng, đồng thời khí giãn nở thực hiện công \\(30\\text{ J}\\) lên pít-tông. Độ biến thiên nội năng của khối khí bằng bao nhiêu Joule (\\(\\text{J}\\))?",
+                        type: "sa", correctAnswer: "70", unit: "J",
+                        explanation: "\\(\\Delta U = Q + A = 100 - 30 = 70\\text{ J}\\)."
+                    },
+                    {
+                        id: "s3_3", level: "Vận dụng cao (Phân tích thực nghiệm)",
+                        question: "Dựa trên thí nghiệm đun nóng chất rắn (SGV Bài 4 & 5): Giả sử công suất cung cấp nhiệt không đổi \\(P = 500\\text{ W}\\), khối lượng chất rắn \\(m = 0,5\\text{ kg}\\), thời gian nóng chảy ngang trên đồ thị là \\(400\\text{ s}\\). Nhiệt nóng chảy riêng \\(\\lambda\\) của chất đó bằng bao nhiêu \\(\\text{kJ/kg}\\)?",
+                        type: "sa", correctAnswer: "400", unit: "kJ/kg",
+                        explanation: "\\(Q = P \\times t = 500 \\times 400 = 200.000\\text{ J}\\). \\(\\lambda = \\frac{200.000}{0,5} = 400.000\\text{ J/kg} = 400\\text{ kJ/kg}\\)."
+                    }
+                ]
+            }
+        ];
+
+        let currentStageIndex = 0; // 0: Chặng 1, 1: Chặng 2, 2: Chặng 3
+        let studentInfo = { name: '', className: '', school: '' };
+        let userAnswers = { 0: {}, 1: {}, 2: {} };
+        let timerInterval = null;
+        let timeLeft = 10 * 60; // 10 phút
+        let timeSpent = 0;
+        let isSubmitted = false;
+
+        window.onload = function() {
+            populateBranchFilter();
+            renderLeaderboard('start-leaderboard-list', 'all');
+            const savedList = JSON.parse(localStorage.getItem('physics_game_leaderboard_offline') || '[]');
+            if (savedList.length > 0) {
+                document.getElementById('start-leaderboard').classList.remove('hidden');
+            }
+        };
+
+        function populateBranchFilter() {
+            const list = JSON.parse(localStorage.getItem('physics_game_leaderboard_offline') || '[]');
+            const schools = [...new Set(list.map(item => item.school))];
+            
+            const filterSelect = document.getElementById('filter-branch');
+            const modalSelect = document.getElementById('modal-filter-branch');
+            
+            let optionsHtml = `<option value="all">Toàn bộ trường / lớp</option>`;
+            schools.forEach(school => {
+                optionsHtml += `<option value="${school}">${school}</option>`;
+            });
+
+            if (filterSelect) filterSelect.innerHTML = optionsHtml;
+            if (modalSelect) modalSelect.innerHTML = optionsHtml;
+        }
+
+        function filterLeaderboard() {
+            const selectedSchool = document.getElementById('filter-branch').value;
+            renderLeaderboard('start-leaderboard-list', selectedSchool);
+        }
+
+        function filterModalLeaderboard() {
+            const selectedSchool = document.getElementById('modal-filter-branch').value;
+            renderLeaderboard('modal-leaderboard-list', selectedSchool);
+        }
+
+        function startExam(event) {
+            event.preventDefault();
+            studentInfo.name = document.getElementById('input-name').value.trim();
+            studentInfo.className = document.getElementById('input-class').value.trim();
+            studentInfo.school = document.getElementById('input-school').value.trim();
+
+            if (!studentInfo.name || !studentInfo.className || !studentInfo.school) {
+                alert('Vui lòng điền đầy đủ thông tin học sinh!');
+                return;
+            }
+
+            document.getElementById('student-modal').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('timer-display').classList.remove('hidden');
+            document.getElementById('header-subtitle').textContent = `Học sinh: ${studentInfo.name} (${studentInfo.className} - ${studentInfo.school})`;
+
+            renderCurrentStage();
+            startTimer();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderCurrentStage() {
+            const stage = gameStages[currentStageIndex];
+            document.getElementById('assigned-stage-badge').textContent = stage.stageName;
+
+            const container = document.getElementById('active-stage-container');
+            let html = `<div class="bg-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 text-sm text-indigo-200 mb-4">
+                <strong>Hướng dẫn:</strong> ${stage.description}
+            </div>`;
+
+            stage.questions.forEach((q, index) => {
+                html += `
+                    <div class="bg-slate-800 border border-slate-700/80 rounded-2xl p-6 shadow-md question-card" data-stage="${currentStageIndex}" data-index="${index}" data-id="${q.id}">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                            <span class="font-bold text-white text-base">Câu ${index + 1} (${stage.stageName.split(':')[0]})</span>
+                            <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-indigo-500/20 text-indigo-300 border-indigo-500/30">${q.level}</span>
+                        </div>
+                        <p class="text-slate-200 font-medium mb-4 leading-relaxed">${q.question}</p>
+                `;
+
+                if (q.type === 'tf') {
+                    html += `<div class="space-y-3">`;
+                    q.subQuestions.forEach((sub, subIdx) => {
+                        const subLetter = ['a', 'b', 'c', 'd'][subIdx];
+                        const savedVal = userAnswers[currentStageIndex][q.id] && userAnswers[currentStageIndex][q.id].tfAnswers ? userAnswers[currentStageIndex][q.id].tfAnswers[subIdx] : undefined;
+                        html += `
+                            <div class="p-3.5 rounded-xl border border-slate-700/60 bg-slate-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <span class="text-sm text-slate-300"><strong>${subLetter})</strong> ${sub.text}</span>
+                                <div class="flex gap-4 flex-shrink-0">
+                                    <label class="cursor-pointer text-xs font-semibold text-emerald-400 flex items-center gap-1 bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-500/30">
+                                        <input type="radio" name="tf_${q.id}_${subIdx}" value="true" ${savedVal === true ? 'checked' : ''} onchange="handleTfSelect('${q.id}', ${subIdx}, true)" class="text-emerald-500"> Đúng
+                                    </label>
+                                    <label class="cursor-pointer text-xs font-semibold text-rose-400 flex items-center gap-1 bg-rose-950/40 px-3 py-1.5 rounded-lg border border-rose-500/30">
+                                        <input type="radio" name="tf_${q.id}_${subIdx}" value="false" ${savedVal === false ? 'checked' : ''} onchange="handleTfSelect('${q.id}', ${subIdx}, false)" class="text-rose-500"> Sai
+                                    </label>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'sa') {
+                    const savedSa = userAnswers[currentStageIndex][q.id] && userAnswers[currentStageIndex][q.id].saAnswer ? userAnswers[currentStageIndex][q.id].saAnswer : '';
+                    html += `
+                        <div class="flex items-center gap-3 mt-4">
+                            <input type="text" id="sa_input_${q.id}" value="${savedSa}" oninput="handleSaInput('${q.id}', this.value)" placeholder="Nhập đáp án số..." 
+                                class="w-full sm:w-72 px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-base">
+                            <span class="text-sm font-semibold text-indigo-400 bg-slate-900/80 px-4 py-3 rounded-xl border border-slate-700">${q.unit}</span>
+                        </div>
+                    `;
+                } else {
+                    const savedMc = userAnswers[currentStageIndex][q.id] && userAnswers[currentStageIndex][q.id].selected !== undefined ? userAnswers[currentStageIndex][q.id].selected : undefined;
+                    html += `<div class="space-y-2.5">`;
+                    q.options.forEach((opt, optIndex) => {
+                        const optionLetter = String.fromCharCode(65 + optIndex);
+                        html += `
+                            <label class="option-label flex items-start gap-3 p-3.5 rounded-xl border border-slate-700/60 bg-slate-900/50 hover:bg-slate-700/40 cursor-pointer transition-all">
+                                <input type="radio" name="q_${q.id}" value="${optIndex}" ${savedMc === optIndex ? 'checked' : ''} onchange="handleMcSelect('${q.id}', ${optIndex})" class="mt-1 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                                <span class="text-sm text-slate-300 leading-normal"><strong class="text-indigo-400 mr-1">${optionLetter}.</strong> ${opt.text}</span>
+                            </label>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+
+                html += `
+                    <div id="explanation-${q.id}" class="hidden mt-4 pt-4 border-t border-slate-700 text-xs text-slate-400 bg-slate-900/80 p-3 rounded-xl">
+                        <span class="font-bold text-indigo-400">Giải thích chi tiết:</span> ${q.explanation}
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            updateNavigationButtons();
+            updateProgress();
+
+            if (window.renderMathInElement) {
+                renderMathInElement(container);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleMcSelect(qId, optIdx) {
+            if (!userAnswers[currentStageIndex][qId]) userAnswers[currentStageIndex][qId] = {};
+            userAnswers[currentStageIndex][qId].selected = optIdx;
+            updateProgress();
+        }
+
+        function handleTfSelect(qId, subIdx, val) {
+            if (!userAnswers[currentStageIndex][qId]) userAnswers[currentStageIndex][qId] = {};
+            if (!userAnswers[currentStageIndex][qId].tfAnswers) userAnswers[currentStageIndex][qId].tfAnswers = {};
+            userAnswers[currentStageIndex][qId].tfAnswers[subIdx] = val;
+            updateProgress();
+        }
+
+        function handleSaInput(qId, val) {
+            if (!userAnswers[currentStageIndex][qId]) userAnswers[currentStageIndex][qId] = {};
+            userAnswers[currentStageIndex][qId].saAnswer = val.trim();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            let totalQ = 0;
+            let answeredQ = 0;
+
+            gameStages.forEach((stage, sIdx) => {
+                stage.questions.forEach(q => {
+                    totalQ++;
+                    const ans = userAnswers[sIdx][q.id];
+                    if (ans) {
+                        if (q.type === 'mc' && ans.selected !== undefined) answeredQ++;
+                        else if (q.type === 'tf' && ans.tfAnswers && Object.keys(ans.tfAnswers).length === 4) answeredQ++;
+                        else if (q.type === 'sa' && ans.saAnswer) answeredQ++;
+                    }
+                });
+            });
+
+            document.getElementById('progress-text').textContent = `${answeredQ}/${totalQ} câu`;
+            const percent = (answeredQ / totalQ) * 100;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+        }
+
+        function updateNavigationButtons() {
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+
+            if (currentStageIndex === 0) {
+                btnPrev.classList.add('hidden');
+            } else {
+                btnPrev.classList.remove('hidden');
+            }
+
+            if (currentStageIndex === gameStages.length - 1) {
+                btnNext.textContent = "Nộp bài hoàn thành";
+                btnNext.setAttribute('onclick', 'confirmSubmitQuiz()');
+                btnNext.classList.remove('bg-indigo-600', 'hover:bg-indigo-500');
+                btnNext.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+            } else {
+                btnNext.textContent = "Tiếp theo chặng \u2192";
+                btnNext.setAttribute('onclick', 'nextStage()');
+                btnNext.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                btnNext.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
+            }
+        }
+
+        function nextStage() {
+            if (currentStageIndex < gameStages.length - 1) {
+                currentStageIndex++;
+                renderCurrentStage();
+            }
+        }
+
+        function prevStage() {
+            if (currentStageIndex > 0) {
+                currentStageIndex--;
+                renderCurrentStage();
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    if (!isSubmitted) {
+                        alert('Đã hết thời gian 10 phút! Hệ thống tự động nộp bài.');
+                        submitQuiz();
+                    }
+                    return;
+                }
+                timeLeft--;
+                timeSpent++;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('time-remaining').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function confirmSubmitQuiz() {
+            if (confirm('Bạn có chắc chắn muốn nộp bài tổng kết 3 chặng không?')) {
+                submitQuiz();
+            }
+        }
+
+        function submitQuiz() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+            clearInterval(timerInterval);
+
+            let score = 0; // Thang điểm 10
+
+            gameStages.forEach((stage, sIdx) => {
+                stage.questions.forEach(q => {
+                    const ans = userAnswers[sIdx][q.id];
+                    if (!ans) return;
+
+                    if (q.type === 'mc') {
+                        if (ans.selected !== undefined && q.options[ans.selected].correct) {
+                            score += 0.5; // 10 câu chặng 1 * 0.5 = 5.0 đ
+                        }
+                    } else if (q.type === 'tf') {
+                        if (ans.tfAnswers) {
+                            let correctSub = 0;
+                            q.subQuestions.forEach((sub, subIdx) => {
+                                if (ans.tfAnswers[subIdx] === sub.correct) correctSub++;
+                            });
+                            score += correctSub * 0.25; // Mỗi ý đúng 0.25, mỗi câu 1.0 -> 3 câu = 3.0 đ
+                        }
+                    } else if (q.type === 'sa') {
+                        if (ans.saAnswer && ans.saAnswer.toLowerCase() === q.correctAnswer.toLowerCase()) {
+                            score += 0.66; // 3 câu chặng 3 * ~0.66 = ~2.0 đ
+                        }
+                    }
+                });
+            });
+
+            score = Math.min(10, Math.max(0, score));
+            saveToLeaderboard(score);
+            populateBranchFilter();
+
+            const totalMins = Math.floor(timeSpent / 60);
+            const totalSecs = timeSpent % 60;
+            const timeFormatted = `${totalMins.toString().padStart(2, '0')}:${totalSecs.toString().padStart(2, '0')}`;
+
+            document.getElementById('result-student-meta').textContent = `Học sinh: ${studentInfo.name} | Lớp: ${studentInfo.className} | Trường: ${studentInfo.school}`;
+            document.getElementById('result-score').textContent = `${score.toFixed(1)} / 10`;
+            document.getElementById('result-time').textContent = timeFormatted;
+
+            renderLeaderboard('modal-leaderboard-list', 'all');
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        function saveToLeaderboard(score) {
+            const record = {
+                name: studentInfo.name,
+                className: studentInfo.className,
+                school: studentInfo.school,
+                score: score,
+                time: timeSpent,
+                date: new Date().toLocaleDateString('vi-VN')
+            };
+
+            let list = JSON.parse(localStorage.getItem('physics_game_leaderboard_offline') || '[]');
+            list.push(record);
+            list.sort((a, b) => b.score - a.score || a.time - b.time);
+            localStorage.setItem('physics_game_leaderboard_offline', JSON.stringify(list));
+        }
+
+        function renderLeaderboard(elementId, schoolFilter) {
+            let list = JSON.parse(localStorage.getItem('physics_game_leaderboard_offline') || '[]');
+            if (schoolFilter && schoolFilter !== 'all') {
+                list = list.filter(item => item.school === schoolFilter);
+            }
+            list = list.slice(0, 10); // TOP 10 từ cao xuống thấp
+
+            const container = document.getElementById(elementId);
+            if (!container) return;
+
+            if (list.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-2">Chưa có dữ liệu thành tích cho lớp/phân hiệu này.</p>`;
+                return;
+            }
+
+            let html = '';
+            list.forEach((item, index) => {
+                const mins = Math.floor(item.time / 60);
+                const secs = item.time % 60;
+                const timeStr = `${mins}p ${secs}s`;
+                
+                let badgeColor = 'text-slate-400 bg-slate-800';
+                if (index === 0) badgeColor = 'text-amber-400 bg-amber-500/10 border border-amber-500/30';
+                else if (index === 1) badgeColor = 'text-slate-200 bg-slate-700/50';
+                else if (index === 2) badgeColor = 'text-orange-400 bg-orange-500/10 border border-orange-500/30';
+
+                html += `
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 rounded-lg font-bold flex items-center justify-center ${badgeColor}">#${index + 1}</span>
+                            <div>
+                                <div class="font-semibold text-slate-200">${item.name} (${item.className} - ${item.school})</div>
+                                <div class="text-[10px] text-slate-500">${item.date}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-indigo-400 text-sm">${item.score.toFixed(1)} đ</div>
+                            <div class="text-[10px] text-slate-400">${timeStr}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function clearLeaderboard() {
+            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử và bảng vinh danh không?')) {
+                localStorage.removeItem('physics_game_leaderboard_offline');
+                document.getElementById('start-leaderboard').classList.add('hidden');
+                renderLeaderboard('start-leaderboard-list', 'all');
+            }
+        }
+
+        function showReviewMode() {
+            document.getElementById('result-modal').classList.add('hidden');
+            
+            currentStageIndex = 0;
+            renderCurrentStage();
+
+            gameStages.forEach((stage, sIdx) => {
+                stage.questions.forEach(q => {
+                    const expBox = document.getElementById(`explanation-${q.id}`);
+                    if (expBox) expBox.classList.remove('hidden');
+                });
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
